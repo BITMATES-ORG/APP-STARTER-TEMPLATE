@@ -5,15 +5,15 @@ import { create } from "zustand";
 
 const TOKEN_KEY = "token";
 
-// For testing purpose
-const USE_MOCK = true;
+// For testing purpose - disable in production
+const USE_MOCK = __DEV__ && !process.env.BACKEND_URL;
 
 const mockUser = (isVerified: boolean): User => ({
   firstName: "Booyah",
   lastName: "Booyah",
   username: "Booyah",
   email: "booyah@booyah.com",
-  isVerified: false,
+  isVerified,
   createdAt: "Yesterday",
 });
 
@@ -116,9 +116,7 @@ export const useAuth = create<AuthStore>((set) => ({
             body: { firstName, lastName, userName, email, password },
           });
 
-      await SecureStore.setItemAsync(TOKEN_KEY, token, {
-        keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
-      });
+      await SecureStore.setItemAsync(TOKEN_KEY, token);
       set({ user, token });
       return { success: true, user };
     } catch (error) {
@@ -138,9 +136,7 @@ export const useAuth = create<AuthStore>((set) => ({
             body: { email, password },
           });
 
-      await SecureStore.setItemAsync(TOKEN_KEY, token, {
-        keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
-      });
+      await SecureStore.setItemAsync(TOKEN_KEY, token);
       set({ user, token });
       return { success: true, user };
     } catch (error) {

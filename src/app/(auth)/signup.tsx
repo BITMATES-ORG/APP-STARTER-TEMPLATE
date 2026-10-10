@@ -41,7 +41,7 @@ const SignupScreen = () => {
   const validate = () => {
     const next: typeof errors = {};
     if (username.trim().length < 3)
-      next.password = "Username must be at least 4 characters";
+      next.username = "Username must be at least 4 characters";
     if (!EMAIL_REGEX.test(email.trim()))
       next.email = "Enter a valid email address";
     if (password.length < 6)

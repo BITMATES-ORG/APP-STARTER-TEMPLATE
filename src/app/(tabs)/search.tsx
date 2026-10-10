@@ -1,10 +1,10 @@
 import { styles } from "@/styles/search";
 import { Text, View } from "react-native";
-const SearchSceen = () => {
+const SearchScreen = () => {
   return (
     <View style={styles.body}>
-      <Text>SearchSceen</Text>
+      <Text>SearchScreen</Text>
     </View>
   );
 };
-export default SearchSceen;
+export default SearchScreen;
