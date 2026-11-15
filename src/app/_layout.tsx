@@ -1,5 +1,7 @@
 import SafeScreen from "@/components/SafeScreen";
+import { ENV } from "@/lib/env";
 import { useAuth } from "@/store/useAuth";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
@@ -11,6 +13,16 @@ export default function RootLayout() {
   const checkAuth = useAuth((s) => s.checkAuth);
   const isInitializing = useAuth((s) => s.isInitializing);
   const user = useAuth((s) => s.user);
+
+  useEffect(() => {
+    if (!ENV.GOOGLE_WEB_CLIENT_ID) {
+      throw new Error("EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID is not set");
+    }
+    GoogleSignin.configure({
+      webClientId: ENV.GOOGLE_WEB_CLIENT_ID,
+      offlineAccess: true,
+    });
+  }, []);
 
   // Verify the stored token once, on app start.
   useEffect(() => {

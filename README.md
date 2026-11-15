@@ -1,314 +1,306 @@
 # App Starter Template
 
-A production-ready React Native Expo starter template with authentication, theming, and file-based routing. Clone this repository to kickstart your next mobile app.
+A production-ready starting point for cross-platform mobile apps that need authentication, protected navigation, and a polished user interface out of the box. This template handles login, signup, email verification, forgot password, and Google sign-in so developers can focus on building their actual product features instead of wiring up auth for the hundredth time.
+
+```mermaid
+flowchart LR
+  App["Mobile App"]
+  Router["Expo Router"]
+  Auth["Auth Store"]
+  API["Backend API"]
+  Secure["Secure Storage"]
+
+  App --> Router
+  Router --> Auth
+  Auth --> API
+  Auth --> Secure
+
+  style App fill:#1e1b4b,stroke:#6366f1,stroke-width:2px,color:#fff
+  style Router fill:#2e1065,stroke:#8b5cf6,stroke-width:2px,color:#fff
+  style Auth fill:#2e1065,stroke:#8b5cf6,stroke-width:2px,color:#fff
+  style API fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#fff
+  style Secure fill:#4c0519,stroke:#ef4444,stroke-width:2px,color:#fff
+```
 
 ## Features
 
-- **Expo Router v5** - File-based routing with typed routes
-- **Authentication Flow** - Login, signup, email verification, forgot password
-- **Secure Token Storage** - Using `expo-secure-store` with platform-specific keychain options
-- **Zustand State Management** - Lightweight global auth store
-- **Multi-Theme System** - 6 beautiful themes with design tokens (spacing, radius, typography)
-- **TypeScript Strict Mode** - Full type safety across the codebase
-- **React Native Reanimated** - Smooth tab bar animations
-- **Safe Area Handling** - Proper insets for notches, home indicators, status bars
-- **Keyboard-Aware Forms** - `KeyboardAvoidingView` + `ScrollView` on all auth screens
+- **Complete Authentication Flow**: Login, signup, email verification, forgot password, and Google sign-in screens are included and connected through a shared auth store.
+- **Protected Routing**: Route guards automatically send unverified or logged-out users to the auth screens and verified users to the main app.
+- **Secure Token Storage**: Tokens are stored in the device's secure keychain so sessions persist safely between app launches.
+- **Animated Custom Tab Bar**: A polished bottom tab bar with smooth transitions and icon labels.
+- **Theme System**: Design tokens for colors, spacing, radius, and typography keep the entire app visually consistent.
+- **Keyboard-Aware Forms**: All auth screens handle software keyboards gracefully on both iOS and Android.
+- **Type-Safe Codebase**: Full TypeScript coverage across screens, stores, and shared types.
 
-## Quick Start
+### Authentication Flow
 
-### Prerequisites
+When a user logs in, the app validates input, talks to the backend, stores the session token, and routes the user to the right screen based on their verification status.
 
-- Node.js 20+
-- npm / yarn / pnpm
-- Expo CLI: `npm install -g expo-cli`
-- iOS Simulator (macOS) or Android Emulator
+```mermaid
+sequenceDiagram
+  actor User
+  participant App
+  participant Auth as Auth Store
+  participant API as Backend API
 
-### Installation
-
-```bash
-# Clone the template
-git clone <your-repo-url> my-new-app
-cd my-new-app
-
-# Install dependencies
-npm install
-
-# Configure environment
-cp .env.example .env
-# Edit .env and set BACKEND_URL=https://your-api.example.com
-
-# Start development server
-npm start
+  User->>App: Enters credentials
+  App->>Auth: login(email, password)
+  Auth->>API: POST /api/login
+  API->>Auth: Return user + token
+  Auth->>Auth: Save token securely
+  Auth->>App: Update auth state
+  App->>User: Go to home or verify email
 ```
 
-### Environment Variables
+### Email Verification Flow
 
-Create a `.env` file from `.env.example`:
+After registering, users who are not yet verified enter a 6-digit code. Once the backend confirms the code, the auth store marks the user as verified and the protected router pushes them into the main app.
+
+```mermaid
+sequenceDiagram
+  actor User
+  participant App
+  participant Auth as Auth Store
+  participant API as Backend API
+
+  User->>App: Enters 6-digit code
+  App->>Auth: verifyEmail(code)
+  Auth->>API: POST /api/verify-email
+  API->>Auth: Confirm verification
+  Auth->>Auth: Mark user verified
+  App->>User: Enter main app
+```
+
+## Installation
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/BITMATES-ORG/APP-STARTER-TEMPLATE.git
+cd APP-STARTER-TEMPLATE
+```
+
+2. Install dependencies:
+
+```bash
+npm install
+```
+
+3. Configure environment variables:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and set the required values:
 
 ```env
+EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=your_google_web_client_id
 BACKEND_URL=https://your-api.example.com
 ```
 
-> **Important**: The app will not connect to a real backend until you set `BACKEND_URL` and disable mock mode (see [Configuration](#configuration)).
+4. Start the development server:
 
-## Project Structure
-
-```
-src/
-├── app/                    # Expo Router pages (file-based routing)
-│   ├── _layout.tsx         # Root layout: auth guards, splash screen
-│   ├── (auth)/             # Auth group (public routes)
-│   │   ├── _layout.tsx     # Auth stack with route guards
-│   │   ├── index.tsx       # Login screen
-│   │   ├── signup.tsx      # Registration screen
-│   │   ├── verify-email.tsx# OTP verification
-│   │   └── forgot-password.tsx
-│   └── (tabs)/             # Protected app group
-│       ├── _layout.tsx     # Tab navigator + custom TabBar
-│       ├── home.tsx
-│       ├── search.tsx
-│       └── settings.tsx
-├── components/
-│   ├── SafeScreen.tsx      # Wrapper: safe area insets + status bar + background
-│   └── TabBar.tsx          # Animated custom tab bar (Reanimated)
-├── lib/
-│   ├── env.ts              # Validated environment config
-│   └── themes.ts           # Theme definitions + design tokens
-├── store/
-│   └── useAuth.ts          # Zustand auth store + API client
-├── styles/                 # StyleSheet.create per screen
-│   ├── auth.ts
-│   ├── home.ts
-│   ├── search.ts
-│   └── settings.ts
-└── types/
-    └── index.ts            # Shared TypeScript interfaces
+```bash
+npm start
 ```
 
-## Configuration
+Then press `i` for iOS, `a` for Android, or `w` for web.
 
-### 1. Backend API
+## Usage
 
-The template expects a REST API with these endpoints:
+Open the app and you'll land on the login screen. From there you can:
 
-| Method | Endpoint | Body | Response |
-|--------|----------|------|----------|
-| POST | `/api/register` | `{firstName, lastName, userName, email, password}` | `{user, token}` |
-| POST | `/api/login` | `{email, password}` | `{user, token}` |
-| GET | `/api/me` | (Authorization header) | `{user}` |
-| POST | `/api/verify-email` | `{code}` | `{success: true}` |
-| POST | `/api/resend-verification` | `{email}` | `{success: true}` |
-| POST | `/api/forgot-password` | `{email}` | `{success: true}` |
+- Log in with an existing account
+- Create a new account on the signup screen
+- Reset a forgotten password
+- Verify your email with a 6-digit code
+- Sign in with Google
 
-**User object** (from `/api/me` and auth responses):
+Once authenticated and verified, the app shows a three-tab layout with Home, Search, and Settings. The Settings tab displays the current user's profile and a logout button.
 
-```ts
-interface User {
-  firstName: string | null;
-  lastName: string | null;
-  username: string;
-  email: string;
-  imageUrl?: string | null;
-  isVerified: boolean;
-  createdAt: string; // ISO date string
+### Project Scripts
+
+| Command                 | Description                           |
+| ----------------------- | ------------------------------------- |
+| `npm start`             | Start the Expo development server     |
+| `npm run android`       | Run on an Android emulator or device  |
+| `npm run ios`           | Run on an iOS simulator or device     |
+| `npm run web`           | Run the app in the browser            |
+| `npm run lint`          | Run ESLint with the Expo config       |
+| `npm run reset-project` | Reset the project to a blank template |
+
+## API Documentation
+
+The app expects a REST API at the `BACKEND_URL` configured in your environment. Below are the endpoints used by the auth store.
+
+#### POST /api/register
+
+**Description**: Create a new user account.
+
+**Request**:
+
+```json
+{
+  "firstName": "Jane",
+  "lastName": "Doe",
+  "userName": "janedoe",
+  "email": "jane@example.com",
+  "password": "securepassword123"
 }
 ```
 
-### 2. Disable Mock Mode
+**Response**:
 
-In `src/store/useAuth.ts`, change line 9:
-
-```ts
-// For testing purpose
-const USE_MOCK = false; // <-- Set to false for production
-```
-
-When `USE_MOCK = true` (default), the app uses hardcoded mock users and fake delays. **Never ship with mock mode enabled.**
-
-### 3. Theme Selection
-
-In `src/lib/themes.ts`, line 419:
-
-```ts
-export const THEME = emeraldNoir; // Change to any exported theme
-```
-
-Available themes: `midnightAurora`, `solarFlare`, `emeraldNoir`, `oceanBreeze`, `roseQuartz`, `obsidianGold`, `cyberNeon`.
-
-> **Note**: Runtime theme switching is not yet implemented. The theme is compiled in. See [Roadmap](#roadmap).
-
-### 4. App Identity
-
-Edit `app.json`:
-- `name`, `slug`, `version`
-- `scheme` (for deep links)
-- `icon`, `splash` images in `assets/images/`
-
-## Scripts
-
-| Command | Description |
-|---------|-------------|
-| `npm start` | Start Expo dev server |
-| `npm run android` | Open in Android emulator |
-| `npm run ios` | Open in iOS simulator |
-| `npm run web` | Run in browser |
-| `npm run lint` | Run ESLint (Expo config) |
-| `npm run reset-project` | Reset to blank template |
-
-## Authentication Flow
-
-```
-App Start
-    │
-    ▼
-checkAuth() ──────► Token in SecureStore?
-    │                    │
-    │ No                 │ Yes
-    ▼                    ▼
-isInitializing=false   GET /api/me
-    │                    │
-    │                    ├── 200 OK ──► user + token stored
-    │                    │
-    │                    └── 401/403 ──► Token deleted
-    │
-    ▼
-isVerified?
-    │
-    ├── true  ──► (tabs) stack (home, search, settings)
-    │
-    └── false ──► (auth) stack
-                      │
-                      ├── No user ──► Login / Signup / Forgot Password
-                      │
-                      └── User exists, not verified ──► Verify Email
-```
-
-### Route Guards
-
-- `Stack.Protected guard={isVerified}` — Only verified users see `(tabs)`
-- `Stack.Protected guard={!isVerified}` — Everyone else sees `(auth)`
-- Inside `(auth)`: `guard={!user}` for login/signup, `guard={!!user && !user.isVerified}` for verify-email
-
-## Theming System
-
-### Design Tokens
-
-```ts
-// src/lib/themes.ts
-export const tokens = {
-  radius: { sm: 8, md: 12, lg: 16, xl: 24, pill: 999 },
-  spacing: { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 },
-  fontSize: { xs: 12, sm: 14, md: 16, lg: 18, xl: 22, xxl: 28, display: 36 },
-} as const;
-```
-
-Usage:
-
-```tsx
-import { THEME, tokens } from '@/lib/themes';
-import { StyleSheet } from 'react-native';
-
-const styles = StyleSheet.create({
-  card: {
-    borderRadius: tokens.radius.lg,
-    padding: tokens.spacing.xl,
-    backgroundColor: THEME.cardBackground,
+```json
+{
+  "user": {
+    "firstName": "Jane",
+    "lastName": "Doe",
+    "username": "janedoe",
+    "email": "jane@example.com",
+    "isVerified": false,
+    "createdAt": "2025-01-01T00:00:00.000Z"
   },
-  title: {
-    fontSize: tokens.fontSize.xl,
-    color: THEME.textPrimary,
-  },
-});
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
 ```
 
-### Theme Object Structure
+**Errors**:
 
-Each theme contains 50+ color tokens covering:
-- Primary/secondary/accent with light/dark variants
-- Text colors (primary, secondary, muted, placeholder, link)
-- Backgrounds (base, alt, card, elevated, input, overlay)
-- Borders, dividers, shadows
-- Tab bar specific colors
-- Semantic colors (success, warning, error, info)
-- Gradients (primary, background, accent)
+- 400: Validation failed or account already exists
+- 500: Server error
 
-## Adding New Screens
+#### POST /api/login
 
-### Protected Tab Screen
+**Description**: Authenticate an existing user.
 
-1. Create `src/app/(tabs)/new-screen.tsx`
-2. Add to `src/app/(tabs)/_layout.tsx`:
+**Request**:
 
-```tsx
-<Tabs.Screen name="new-screen" options={{ title: 'New Screen' }} />
+```json
+{
+  "email": "jane@example.com",
+  "password": "securepassword123"
+}
 ```
 
-3. Add icon in `TabBar.tsx` `getIcon()` function.
+**Response**:
 
-### Auth Screen
-
-1. Create `src/app/(auth)/new-screen.tsx`
-2. Add to `src/app/(auth)/_layout.tsx` with appropriate guard.
-
-## Common Customizations
-
-### Change Primary Color
-
-Edit the theme in `src/lib/themes.ts` or create a new theme object.
-
-### Add Custom Font
-
-1. Add font files to `assets/fonts/`
-2. Use `expo-font` in `app/_layout.tsx`:
-
-```tsx
-import { useFonts } from 'expo-font';
-
-const [fontsLoaded] = useFonts({
-  'MyFont-Regular': require('@/assets/fonts/MyFont-Regular.ttf'),
-  'MyFont-Bold': require('@/assets/fonts/MyFont-Bold.ttf'),
-});
-
-if (!fontsLoaded) return null;
+```json
+{
+  "user": { "...": "..." },
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
 ```
 
-### Enable Biometric Auth
+**Errors**:
 
-The token is stored with `WHEN_UNLOCKED_THIS_DEVICE_ONLY` (iOS) / equivalent Android protection. For explicit biometric prompts, add `expo-local-authentication`.
+- 400: Missing fields
+- 401: Invalid credentials
+- 500: Server error
 
-## Known Limitations / Roadmap
+#### GET /api/me
 
-- [ ] **Runtime theme switching** — ThemeContext + AsyncStorage persistence
-- [ ] **Token refresh / auto-logout** — Axios interceptor or fetch wrapper with 401 handling
-- [ ] **Google / Apple Sign-In** — Replace TODO in login/signup screens
-- [ ] **Push notifications** — `expo-notifications` setup
-- [ ] **Offline support** — `react-query` / `tanstack-query` + persistence
-- [ ] **E2E tests** — Detox / Maestro configuration
-- [ ] **Storybook** — Component documentation
-- [ ] **CI/CD** — EAS Build + GitHub Actions workflow
+**Description**: Fetch the currently authenticated user.
 
-## Troubleshooting
+**Authentication**: Required. Pass `Authorization: Bearer {token}`.
 
-### "BACKEND_URL is undefined"
+**Response**:
 
-Ensure `.env` exists and contains `BACKEND_URL=...`. Restart the dev server after changes.
+```json
+{
+  "user": { "...": "..." }
+}
+```
 
-### Splash screen never hides
+**Errors**:
 
-`checkAuth()` must complete. Check SecureStore permissions and network connectivity.
+- 401: Missing or invalid token
+- 403: Token expired or revoked
 
-### Tab bar icons not showing
+#### POST /api/verify-email
 
-Ensure `@expo/vector-icons` font is loaded (automatic in Expo SDK 57+).
+**Description**: Verify a user's email address with a 6-digit code.
 
-### TypeScript errors after adding files
+**Request**:
 
-Run `npx tsc --noEmit` to verify. Restart TS server in VS Code: `Ctrl+Shift+P` → "TypeScript: Restart TS Server".
+```json
+{
+  "code": "123456"
+}
+```
 
-## License
+**Response**:
 
-MIT — See [LICENSE](LICENSE) for details.
+```json
+{
+  "success": true
+}
+```
 
----
+**Errors**:
 
-**Happy coding!** 🚀 If you improve this template, consider contributing back.
+- 400: Invalid or expired code
+- 401: Unauthorized
+
+#### POST /google/login
+
+**Description**: Authenticate or register a user after a successful Google sign-in.
+
+**Request**:
+
+```json
+{
+  "googleUser": { "...": "..." },
+  "idToken": "google_id_token"
+}
+```
+
+**Response**:
+
+```json
+{
+  "user": { "...": "..." },
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Errors**:
+
+- 400: Invalid Google token
+- 500: Server error
+
+### Environment Variables
+
+| Variable                           | Required | Description                             |
+| ---------------------------------- | -------- | --------------------------------------- |
+| `BACKEND_URL`                      | Yes      | Base URL of the backend API             |
+| `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` | Yes      | Google Web Client ID for Google Sign-In |
+
+## Technologies Used
+
+| Technology                                                                     | Description                                        |
+| ------------------------------------------------------------------------------ | -------------------------------------------------- |
+| [TypeScript](https://www.typescriptlang.org/)                                  | Typed JavaScript for safer, more maintainable code |
+| [Expo](https://expo.dev/)                                                      | Cross-platform mobile development framework        |
+| [React Native](https://reactnative.dev/)                                       | Native mobile UI library                           |
+| [Expo Router](https://expo.dev/router)                                         | File-based routing for React Native                |
+| [Zustand](https://zustand.docs.pm/)                                            | Lightweight state management                       |
+| [React Native Reanimated](https://docs.swmansion.com/react-native-reanimated/) | Smooth animations and transitions                  |
+| [expo-secure-store](https://docs.expo.dev/versions/latest/sdk/secure-store/)   | Secure local token storage                         |
+| [Google Sign-In](https://react-native-google-signin.github.io/)                | Social authentication                              |
+
+## Contributing
+
+Contributions are welcome. If you find a bug or have an idea for an improvement, open an issue or submit a pull request. Please keep changes focused and follow the existing code style.
+
+## Author
+
+Built with care for developers who want to ship faster.
+
+<br>
+
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React Native](https://img.shields.io/badge/React_Native-282c34?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactnative.dev/)
+[![Expo](https://img.shields.io/badge/Expo-000020?style=for-the-badge&logo=expo&logoColor=white)](https://expo.dev/)
+[![Zustand](https://img.shields.io/badge/Zustand-443E38?style=for-the-badge&logo=zustand&logoColor=white)](https://zustand.docs.pm/)
