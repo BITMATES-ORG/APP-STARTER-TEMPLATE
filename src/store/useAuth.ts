@@ -1,5 +1,6 @@
 import { ENV } from "@/lib/env";
 import { AuthResponse, User } from "@/types";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import * as SecureStore from "expo-secure-store";
 import { create } from "zustand";
 
@@ -68,6 +69,8 @@ interface AuthStore {
   ) => Promise<AuthResponse>;
   logout: () => Promise<void>;
   markVerified: () => void;
+
+  signInWithGoogle: () => Promise<AuthResponse>;
 }
 
 export const useAuth = create<AuthStore>((set) => ({
@@ -154,4 +157,29 @@ export const useAuth = create<AuthStore>((set) => ({
   // Call this after the email code/link is confirmed. The route guards react automatically.
   markVerified: () =>
     set((s) => (s.user ? { user: { ...s.user, isVerified: true } } : s)),
+
+  signInWithGoogle: async () => {
+    set({ isLoading: true });
+    try {
+      await GoogleSignin.hasPlayServices();
+      const signIn = await GoogleSignin.signIn();
+      if (signIn.type === "cancelled") {
+        return { success: false, error: "Google sign in operation cancelled" };
+      }
+      const googleUser = signIn.data.user;
+      const idToken = signIn.data.idToken;
+
+      const { user, token } = await request<AuthPayload>("/google/login", {
+        method: "POST",
+        body: JSON.stringify({ googleUser, idToken }),
+      });
+      await SecureStore.setItemAsync(TOKEN_KEY, token);
+      set({ user, token });
+      return { success: true, user };
+    } catch (error) {
+      return { success: false, error: messageOf(error) };
+    } finally {
+      set({ isLoading: false });
+    }
+  },
 }));

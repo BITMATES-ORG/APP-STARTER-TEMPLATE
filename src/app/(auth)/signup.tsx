@@ -36,7 +36,7 @@ const SignupScreen = () => {
   }>({});
 
   const router = useRouter();
-  const { isLoading, register } = useAuth();
+  const { isLoading, register, signInWithGoogle } = useAuth();
 
   const validate = () => {
     const next: typeof errors = {};
@@ -62,8 +62,20 @@ const SignupScreen = () => {
     }
   };
 
-  const handleGoogle = () => {
-    // TODO: Implement Google sign-in with @react-native-google-signin (second branch)
+  const handleGoogle = async () => {
+    const response: AuthResponse = await signInWithGoogle();
+    if (response.error) {
+      Alert.alert(response.error || "Something went wrong");
+      return;
+    }
+    if (!response.success) {
+      Alert.alert("Something went wrong!");
+    }
+    if (response.user?.isVerified) {
+      router.push("/(tabs)/home");
+    } else {
+      router.push("/(auth)/verify-email");
+    }
   };
 
   const borderFor = (field: "username" | "email" | "password") =>
